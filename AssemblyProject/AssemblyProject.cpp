@@ -1,20 +1,68 @@
-// AssemblyProject.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
+
+#define SIZE 4
+
+float** multiplyMatrix(float matrixOne[][SIZE], float matrixTwo[][SIZE]) {
+    
+    float** resultMatrix = new float* [SIZE];
+    for (int i = 0; i < SIZE; ++i) {
+        resultMatrix[i] = new float[SIZE];
+    }
+    
+    for (int i = 0; i < SIZE; i++) {
+        for (int j = 0; j < SIZE; j++) {
+            resultMatrix[i][j] = 0;
+            for (int k = 0; k < SIZE; k++) {
+                resultMatrix[i][j] += matrixOne[i][k] * matrixTwo[k][j];
+            }
+        }
+    }
+
+    return resultMatrix;
+}
+
+void printResult(float** resultMatrix) {
+    std::cout << "Matrix result:" << std::endl;
+    for (int i = 0; i < SIZE; ++i) {
+        for (int j = 0; j < SIZE; ++j) {
+            std::cout << resultMatrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void freeMemory(float** resultMatrix) {
+    for (int i = 0; i < SIZE; ++i)
+        delete[] resultMatrix[i];
+    delete[] resultMatrix;
+}
 
 int main()
 {
-    std::cout << "Hello World!\n";
+    // Sample matrix one
+    float matrixOne[SIZE][SIZE] = { 
+                                  { 1.0f,  2.0f,  3.0f,  4.0f  },
+                                  { 5.0f,  6.0f,  7.0f,  8.0f  },
+                                  { 9.0f,  10.0f, 11.0f, 12.0f },
+                                  { 13.0f, 14.0f, 15.0f, 16.0f }
+                                  };
+
+    // Sample matrix two
+    float matrixTwo[SIZE][SIZE] = {
+                                  { 1.0f, 0.0f, 0.0f, 0.0f },
+                                  { 0.0f, 1.0f, 0.0f, 0.0f },
+                                  { 0.0f, 0.0f, 1.0f, 0.0f },
+                                  { 0.0f, 0.0f, 0.0f, 1.0f }
+                                  };
+    // Matrix result
+    float** resultMatrix = multiplyMatrix(matrixOne, matrixTwo);
+
+    // Print result
+    printResult(resultMatrix);
+
+    // Free memory
+    freeMemory(resultMatrix);
+
+    // Stop Application
+    return 0;
 }
-
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

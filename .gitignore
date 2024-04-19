@@ -9,3 +9,6 @@ objs
 *.suo
 *.db
 ipch/
+x64/
+Debug/
+Release/
