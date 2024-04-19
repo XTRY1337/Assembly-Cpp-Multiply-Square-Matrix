@@ -1,10 +1,19 @@
 # Arquitetura de Computadores - Projeto em grupo
 
+## Regras gerais
+
+O relatório deve descrever em detalhe todo o trabalho e resultados obtidos, incluindo os tempos de execução em Assembly e em C++ e todas as informações teóricas necessárias para a execução
+do trabalho.
+
+O relatório deve ser enviado por email até as 11:59pm de 30 de Abril. A Apresentação realiza-se no dia 3 de Maio.
+
+Se for detetada algum copy entre trabalhos, ambos os grupos são punidos com 0.
+
 ## Trabalho utilizando assembly - Trabalho número 8
 
-Using SIMD instructions and pure assembly, make a function to multiply efficiently square
-matrix of float values. The matrix can have any size multiple of 4 (4, 8, 12, 16, …). Compare
-the results obtained with the C++ code. 
+Utilizando instruções SIMD e puro assembly, faça uma função para multiplicar eficientemente matrizes quadradas de valores float.
+As matrizes podem ter qualquer tamanho desde que seja multiplo de 4 (4, 8, 12, 16, …).
+Compare os resultados obtidos com o código em C++.
 
 ## Matrizes quadradas
 
