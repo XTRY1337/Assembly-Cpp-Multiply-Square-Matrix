@@ -13,9 +13,6 @@ Tamanho das matrizes a serem utilizadas no projeto: apenas multiplos de 4, ou se
 
 Exemplo de multiplicaçao de duas matrizes quadradas:
 
--------      --------   -----------------------------
-| 1  2 |     | 4  5 |   | (1x4 + 2x6) | (1x5 + 2x7) |
-|      |  X  |      | = |                           |
-| 3  4 |     | 6  7 |   | (3x4 + 4x6) | (3x5 + 4x7) |
--------      --------   -----------------------------
+![image](https://github.com/FranciscoG001/ADComputadores/assets/82593913/5e4285fd-882e-44ed-81c0-bdfb06c40c0e)
+
 
