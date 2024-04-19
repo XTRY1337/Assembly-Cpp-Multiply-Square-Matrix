@@ -1,0 +1,11 @@
+# C/C++ build outputs
+.build/
+build/
+bins
+gens
+libs
+objs
+.vs/
+*.suo
+*.db
+ipch/
