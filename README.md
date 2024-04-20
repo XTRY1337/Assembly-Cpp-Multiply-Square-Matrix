@@ -24,4 +24,8 @@ Exemplo de multiplicaçao de duas matrizes quadradas:
 
 ![image](https://github.com/FranciscoG001/ADComputadores/assets/82593913/5e4285fd-882e-44ed-81c0-bdfb06c40c0e)
 
+## Executar atualmente o programa
 
+1º Step: Run application
+2º Step: Enter a number that is a multiple of 4 into the console
+3º Step: Wait for the result (Program will create automaticly 2 square matrixes to multiply)
