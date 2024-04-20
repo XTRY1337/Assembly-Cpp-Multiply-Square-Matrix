@@ -25,9 +25,6 @@ float** createMatrixWithRandomValues(int size) {
 
     float** newMatrix = allocateMemoryForMatrix(size);
 
-    // Provide seed time to create different values every time
-    srand(time(nullptr));
-
     // Fill matrix with random values
     for (int i = 0; i < size; ++i)
         for (int j = 0; j < size; ++j)
@@ -121,6 +118,9 @@ int main()
 //CODE TO TRY MANUAL IMPLEMENTATION
 // 
 //#define SIZE 4
+
+//If seed is necessary
+//srand(time(0));
 
 //FUNCTIONS
 // Function to replicate in Assembly - Example 1
