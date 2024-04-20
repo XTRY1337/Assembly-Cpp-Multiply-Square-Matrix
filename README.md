@@ -30,4 +30,4 @@ Exemplo de multiplicaçao de duas matrizes quadradas:
 
 2º Step: Enter a number that is a multiple of 4 into the console
 
-3º Step: Wait for the result (Program will create automaticly 2 square matrixes to multiply)
+3º Step: Wait for the result (Program will create automaticlly 2 square matrixes to multiply)
