@@ -2,7 +2,12 @@
 
 #define LIMITE_RANDOM_NUMBER 10
 
-//---------------- Complementary functions Section ----------------
+//---------------- External Assembly Functions Section ----------------
+extern "C" {
+    int add_int(int, int);
+}
+
+//---------------- Complementary Functions Section ----------------
 float** allocateMemoryForMatrix(int size) {
     float** matrix = new float* [size];
     for (int i = 0; i < size; ++i)
@@ -89,6 +94,9 @@ int handleInputValue() {
 
 int main()
 {
+    // Example code calling assembly function
+    int sum = add_int(2, 3);
+
     // Console input
     int size = handleInputValue();
     
