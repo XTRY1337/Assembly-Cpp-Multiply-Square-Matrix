@@ -43,15 +43,21 @@ SimpleMultiplyWithXMMFourArrayValues PROC
     push ebp								; Save de EBP in the stack
 	mov ebp,esp								; Copy the ESP to EBP
 
+	xor eax, eax							; Clear register EAX
+	xor ebx, ebx							; Clear register EBX
+	xor ecx, ecx							; Clear register ECX
+
 	mov eax, [esp + 8]						; arrayResult
     mov ebx, [esp + 12]						; arrayOne
     mov ecx, [esp + 16]						; arrayTwo
 
 	xor esi, esi							; Clear register ESI
+	pxor xmm0, xmm0							; Clear register XMM0
     mov esi, ebx							; Mov EBX to ESI
     movdqu xmm0, [esi]						; Mov [ESI] to XMM0
 
 	xor esi, esi							; Clear register ESI
+	pxor xmm1, xmm1							; Clear register XMM1
     mov esi, ecx							; Mov EBX to ESI
     movdqu xmm1, [esi]						; Mov [ESI] to XMM0
 
