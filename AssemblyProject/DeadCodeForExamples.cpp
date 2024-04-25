@@ -186,4 +186,158 @@ freeMemory(resultMatrix);
     }
 
 
+
+    SimpleMultiplyWithYMMEightArrayValues PROC
+    push ebp
+    mov ebp, esp
+
+    xor eax, eax
+    xor ebx, ebx
+    xor ecx, ecx
+
+    mov eax, [esp + 8]
+    mov ebx, [esp + 12]
+    mov ecx, [esp + 16]
+
+    xor esi, esi
+    vpxor ymm0, ymm0, ymm0
+    mov esi, ebx
+    vmovups ymm0, [esi]
+
+    xor esi, esi
+    vpxor ymm1, ymm1, ymm1
+    mov esi, ecx
+    vmovups ymm1, [esi]
+
+    vmulps ymm0, ymm0, ymm1
+
+    mov edi, eax
+    vmovups [edi], ymm0
+
+    pop ebp
+    ret
+SimpleMultiplyWithYMMEightArrayValues ENDP
+
+
+
+Add_int PROC								; indicates the function name (used format: add_int(int x1, int x2))
+    push ebp								; first instruction in the function. Save de EBP in the stack
+    mov ebp,esp								; copy the ESP to EBP
+    mov eax,[ebp+8]							; get the first parameter (x1)
+    add eax,[ebp+12]						; add the first parameter with the second parameter
+    pop ebp									; restore the EBP
+    ret										; end the function and return to the main
+Add_int ENDP								; indicates the end of the function. Any other function must be write after this line
+
+
+
+
+Mult_int PROC								; Multiple numbers function
+    push ebp
+    mov ebp,esp
+    mov eax,[ebp+8]
+    mov ebx,[ebp+12]
+    mul ebx
+    pop ebp
+    ret
+Mult_int ENDP
+
+
+
+
+var_byte DB 1								; Define a variable named 'var_byte' with a size of 1 byte and a value of 1
+var_word DW 2								; Define a variable named 'var_word' with a size of 2 bytes and a value of 2
+var_dword DD 3								; Define a variable named 'var_dword' with a size of 4 bytes and a value of 3
+var_qword DQ 4								; Define a variable named 'var_qdword' with a size of 8 bytes and a value of 4
+list_byte DB 1024 DUP(?)					; Define a variable named 'list_byte' with a size of 1*1024 bytes. it's an byte array
+list_int DD 0,1,2,3							; Define a variable named list_int with size 4*4 bytes. It´s an int array
+
+
+
+fld dword ptr [edi]                     ; adiono o edi[0] à stack de float
+                    fld dword ptr [edi+4]                   ; adiono o edi[1] à stack de floats
+                    faddp                                   ; somo os dois valores na stack de floats
+
+                    fld dword ptr [edi+8]                   ; volto a adicionar outro valor
+                    faddp                                   ; volto a somar os ultimos 2 valores na stack floats
+
+                    fld dword ptr [edi+12]                  ; volto a adicionar outro valor
+                    faddp                                   ; volto a somar os ultimos 2 valores na stack floats
+
+                    fstp dword ptr [edi]                    ; guarda a conta final no edi[0]
+
+
+
+
+MultiplyMatrixWithTransposeAssembly PROC
+
+    push ebp								            ; Save de EBP in the stack
+    mov ebp,esp								            ; Copy the ESP to EBP
+
+    mov edi, [esp + 8]		                            ; ArrayResult  float**
+    mov edi, [edi]                                      ; float*
+
+    mov ebx, [esp + 12]						            ; ArrayOne float**
+    mov ebx, [ebx]                                      ; float*
+
+    mov ecx, [esp + 16]						            ; ArrayTwo float**
+    mov ecx, [ecx]                                      ; float*
+
+    mov edx, [esp + 20]                                 ; Size
+    mov inputSize, edx
+
+    mov eax, [esp + 24]                                 ; Aux array float*
+
+    shr edx, 2                                          ; Divide by 4 the size to get index
+    mov auxVarOne, edx                                  ; Save number of times to performe for
+    xor edx, edx
+
+    FirtCycleFor:
+
+        movdqu xmm0, [ebx]                              ; Move first 4 elements of ArrayOne to xmm0
+        mov auxVarThree, 4
+
+            SecondCycleFor:
+
+                movdqu xmm1, [ecx]                      ; Move first 4 elements of ArrayTwo to xmm1
+
+                mulps xmm0, xmm1                        ; Multiply XMM0 with XMM1 and save result in xmm0
+                movdqu [eax], xmm0                      ; Move result to firt 4 element in EDI
+
+                mov auxVarTwo, 3                        ; iniciar auxVarTwo com valor 3 para loop i = 0 i < 3
+
+                fld dword ptr [eax]                     ; adiciono o EDI[0] à stack de float - preciso de adiconar antes senao dentro do ciclo apenas 1 nao funciona
+
+                SumFourValuesLoop:
+
+                    add eax, 4
+                    fld dword ptr [eax]
+                    faddp                               ; somo os ultimos valores na stack de floats
+
+                    dec auxVarTwo
+                    jnz SumFourValuesLoop
+
+                ;END SumFourValuesLoop
+
+                sub eax, 12
+                fstp dword ptr [edi]                    ; guarda a conta final no edi[0]  !!!!!!!!!!! PRECISO SOMAR O EDI + 4 POR CADA CICLO PARA GUARDAR NO LUGAR CERTO
+
+                dec auxVarThree
+                jnz SecondCycleFor
+
+            ;END SecondCycleFor
+
+        mov ebx, [esp + 12]                             ; Voltar a aceder ao ponteiro onde está o float**
+        mov ebx, [ebx + sizeHelper]                        ; ir buscar a outra posição do float*    !!! Este 4 tem de ser pelo numero de ciclos a serem feitos
+        ;add sizeHelper, inputSize
+
+        dec auxVarOne                                   ; Decrement edx
+        jnz FirtCycleFor                                ; Jump to flag if edx different of 0
+
+    ;END FirtCycleFor
+
+    pop ebp									            ; Restore the EBP
+    ret										            ; End the function and return to the main
+
+MultiplyMatrixWithTransposeAssembly ENDP	            ; Indicates the end of the function.
 */
