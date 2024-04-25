@@ -128,7 +128,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DeadCodeForExamples.cpp" />
     <ClCompile Include="MainCode.cpp" />
   </ItemGroup>
   <ItemGroup>
