@@ -1,118 +1,93 @@
-.MODEL FLAT, C								; Use the flat memory model. Use C calling conventions
-.DATA										; indicates the start of variable definitions
+.MODEL FLAT, C								        ; Use the flat memory model. Use C calling conventions
 
-offSetVar dd 0
-counterFirstFor dd 0
-counterSecondFor dd 0
-counterSumFourValues dd 0
+.DATA										        ; Indicates the start of variable definitions
 
-.CODE										; Indicates the start of the code segment.
+offSetVarOne dd 0                                   ; Var offSetVarOne
+offSetVarTwo dd 0                                   ; Var offSetVarTwo
+counterFirstFor dd 0                                ; Var counterFirstFor
+counterSecondFor dd 0                               ; Var counterSecondFor
+counterSumFourValues dd 0                           ; Var counterSumFourValues
+floatZero dd 0.0                                    ; Var floatZero
 
-MultiplyMatrixWithAssembly PROC
+.CODE										        ; Indicates the start of the code segment.
 
-    push ebp								            ; Save de EBP in the stack
-    mov ebp,esp								            ; Copy the ESP to EBP
+MultiplyMatrixWithAssembly PROC                     ; START Function
 
-    mov edi, [esp + 8]		                            ; ArrayResult
-    mov ebx, [esp + 12]						            ; ArrayOne
-    mov ecx, [esp + 16]						            ; ArrayTwo
+    push ebp								        ; Save de EBP in the stack
+    mov ebp,esp								        ; Copy the ESP to EBP
 
-    mov edx, [esp + 20]                                 ; Size
-    mov counterFirstFor, edx
-    mov counterSecondFor, edx
-    mov counterSumFourValues, edx
+    mov edi, [esp + 8]		                        ; ArrayResult
+    mov ebx, [esp + 12]						        ; ArrayOne
+    mov ecx, [esp + 16]						        ; ArrayTwo
 
-    imul eax, edx, 4                                    ; Create offset - 4 bytes per float * size
-    mov offSetVar, eax                                  ; Save offset
-    mov eax, [esp + 24]                                 ; AuxArray
+    mov edx, [esp + 20]                             ; Size
+    mov counterFirstFor, edx                        ; Save size in counterFirstFor
+    mov counterSecondFor, edx                       ; Save size in counterSecondFor
+    mov counterSumFourValues, edx                   ; Save size in counterSumFourValues
 
-    FirtCycleFor:
+    imul eax, edx, 4                                ; Create offset - 4 bytes per float * size | 4bytes * edx(size)
+    mov offSetVarOne, eax                           ; Save offset
 
-        movdqu xmm0, [ebx]
+    imul eax, edx                                   ; Create offset 2 - size * offSetVarOne | exd(size) * eax(edx*4)
+    mov offSetVarTwo, eax                           ; Save offset 2
 
-        mov counterSecondFor, edx
+    mov eax, [esp + 24]                             ; AuxArray
 
-        SecondCycleFor:
+    FirtCycleFor:                                   ; Start FirtCycleFor
+
+        movdqu xmm0, [ebx]                          ; Move memory start of EBX to XMM0
+
+        mov counterSecondFor, edx                   ; Reset counterSecondFor to have value of EDX, value of size
+
+        SecondCycleFor:                             ; Start SecondCycleFor
             
-            movdqu xmm1, [ecx]
-            mulps xmm0, xmm1
-            movdqu [eax], xmm0
+            movdqu xmm1, [ecx]                      ; Move memory start of ECX to XMM1
 
-            mov counterSumFourValues, edx
-            sub counterSumFourValues, 1
+            movdqu xmm2, xmm0                       ; Save XMM0 content in XMM2, do this to not change XMM0 content for the next's for's
+            mulps xmm2, xmm1                        ; Multiply XMM2 with XMM1 and save result in XMM2
+            movdqu [eax], xmm2                      ; Move XMM2 content to memory start of EAX
 
-            fld dword ptr [eax]                     ; adiciono o EAX[0] à stack de float - preciso de adiconar antes senao dentro do ciclo apenas 1 nao funciona
+            mov counterSumFourValues, edx           ; Reset counterSumFourValues to have value of EDX, value of size
 
-            SumValuesLoop:
+            fld dword ptr [floatZero]               ; Add first value to float stack, value 0.0, if I do not do this, the FADDP will not work because they need alreay a value in stack
 
-                add eax, 4
-                fld dword ptr [eax]
-                faddp                               ; somo os ultimos valores na stack de floats
+            SumValuesLoop:                          ; Start SumValuesLoop
 
-                dec counterSumFourValues
-                jnz SumValuesLoop
+                fld dword ptr [eax]                 ; Move value in start memory of EAX to float stack
+                faddp                               ; Add the two value in stack and save the value again in the stack
 
-            ;END SumValuesLoop
+                add eax, 4                          ; Increment eax memory to get the next value Ex: eax = [0] -> eax + 4 -> eax[1]
 
-            sub eax, 12                             ; !! Nao pode sert hardcode 12, por 12 é se for size 4, se for 8, ja vai efetuar o add eax 7 vez já é 4 * 7
-            fstp dword ptr [edi]                    ; !! Preciso incremetar o edi para poder percorer [0][0], [0][1], etc
+                dec counterSumFourValues            ; Decrement counterSumFourValues
+                jnz SumValuesLoop                   ; End loop if counterSumFourValues is zero | run the loop will counterSumFourValues different of zero
 
-            add edi, edx                            ; Incrementar o edi + size, ex: +4 faz com que o proximo registo fique no edi[0,1]
+            ;END SumValuesLoop                      ; END SumValuesLoop
 
-            add ecx, offSetVar
+            sub eax, offSetVarOne                   ; Sub the number of bytes added to EAX to put EAX back to the initial possition
 
-            dec counterSecondFor
-            jnz SecondCycleFor
+            fstp dword ptr [edi]                    ; Save the value in stack to EDI memory location
+
+            add edi, 4                              ; Increment EDI with 4 value to use the next position of EDI in the next loop  
+
+            add ecx, offSetVarOne                   ; Add offSet to ECX to move the memory to the next 4/8 element Ex: if size 4, offset 16, if size 8 offset 32
+
+            dec counterSecondFor                    ; Decrement counterSecondFor
+            jnz SecondCycleFor                      ; End loop if counterSecondFor is zero | run the loop will counterSecondFor different of zero
             
-        ;END SecondCycleFor
+        ;END SecondCycleFor                         ; END SecondCycleFor
 
-        add ebx, offSetVar
+        add ebx, offSetVarOne                       ; Add offSet to EBX to move the memory to the next 4/8 element Ex: if size 4, offset 16, if size 8 offset 32
 
-        sub ecx, 64                                  ; Remover o add do ecx para voltar ao inicio, ora se fizer o segundoFor 4 vezer, signifca que ecx = 4 * 16; sub ecx 64  !! Remover hardcode
+        sub ecx, offSetVarTwo                       ; Sub the number of bytes added to ECX to put ECX back to the initial memory possition
 
-        dec counterFirstFor                                   
-        jnz FirtCycleFor
+        dec counterFirstFor                         ; Decrement counterFirstFor        
+        jnz FirtCycleFor                            ; End loop if counterFirstFor is zero | run the loop will counterFirstFor different of zero
 
-    ;END FirtCycleFor
+    ;END FirtCycleFor                               ; END FirtCycleFor
 
-    pop ebp									            ; Restore the EBP
-    ret										            ; End the function and return to the main
+    pop ebp									        ; Restore the EBP
+    ret										        ; End the function and return to the main
 
-MultiplyMatrixWithAssembly ENDP
+MultiplyMatrixWithAssembly ENDP                     ; END Function
 
-
-
-
-
-
-
-SimpleMultiplyWithXMMAnyArrayValues1D PROC
-                push ebp								; Save de EBP in the stack
-	            mov ebp,esp								; Copy the ESP to EBP
-
-	            mov edi, [esp + 8]		                ; Porque os registo guarda apenas os primeiro 4, porque soa registo 32bits 				; arrayResult +8Bytes
-                mov ebx, [esp + 12]						; ArrayOne
-                mov ecx, [esp + 16]						; ArrayTwo
-                mov edx, [esp + 20]                     ; Size
-
-                shr edx, 2                              ; Guardar o valor de quantas veze preciso de fazer o ciclo ; Cada shift é uma divisao por 2, ou seja shift de 2 é dividir por 4                                         
-
-FirtCycleFor:   movdqu xmm0, [ebx]                      ; Como ebx é o inicio do array, estou a mover apenas os 4 primeiros bytes
-                movdqu xmm1, [ecx]
-
-                mulps xmm0, xmm1                        ; Multiplicar xmm0 com xmm1
-                movdqu [edi], xmm0                      ; Mover o resultado de xmm0 para [edi]
-
-                add ebx, 16                             ; adiciono 16 bytes, porque cada valor ocupa 4  
-                add ecx, 16        
-                add edi, 16
-
-                dec edx
-                jnz FirtCycleFor
-
-	            pop ebp									; Restore the EBP
-                ret										; End the function and return to the main
-SimpleMultiplyWithXMMAnyArrayValues1D ENDP	        ; Indicates the end of the function.
-
-
-END											; indicate the end of the asm file
+END											        ; Indicate the end of the asm file

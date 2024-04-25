@@ -340,4 +340,229 @@ MultiplyMatrixWithTransposeAssembly PROC
     ret										            ; End the function and return to the main
 
 MultiplyMatrixWithTransposeAssembly ENDP	            ; Indicates the end of the function.
+
+
+SimpleMultiplyWithXMMAnyArrayValues1D PROC
+                push ebp							; Save de EBP in the stack
+                mov ebp,esp							; Copy the ESP to EBP
+
+                mov edi, [esp + 8]		            ; Porque os registo guarda apenas os primeiro 4, porque soa registo 32bits 				; arrayResult +8Bytes
+                mov ebx, [esp + 12]					; ArrayOne
+                mov ecx, [esp + 16]					; ArrayTwo
+                mov edx, [esp + 20]                 ; Size
+
+                shr edx, 2                          ; Guardar o valor de quantas veze preciso de fazer o ciclo ; Cada shift é uma divisao por 2, ou seja shift de 2 é dividir por 4
+
+FirtCycleFor:   movdqu xmm0, [ebx]                  ; Como ebx é o inicio do array, estou a mover apenas os 4 primeiros bytes
+                movdqu xmm1, [ecx]
+
+                mulps xmm0, xmm1                    ; Multiplicar xmm0 com xmm1
+                movdqu [edi], xmm0                  ; Mover o resultado de xmm0 para [edi]
+
+                add ebx, 16                         ; adiciono 16 bytes, porque cada valor ocupa 4
+                add ecx, 16
+                add edi, 16
+
+                dec edx
+                jnz FirtCycleFor
+
+                pop ebp								; Restore the EBP
+                ret									; End the function and return to the main
+SimpleMultiplyWithXMMAnyArrayValues1D ENDP	        ; Indicates the end of the function.
+
+
+// Create Matrix's
+    /*float** matrixResult = AllocateMemoryForMatrix(size);
+    float** matrixOne = CreateMatrixWithRandomValues(size);
+    float** transposeMatrix = Transpose(CreateMatrixWithRandomValues(size), size);
+
+    // Create Aux Array
+    float*  auxArray = (float*)malloc(sizeof(float) * size);
+    CleanPositionsArray(auxArray,4);
+
+    // C++ Result
+    // TODO
+
+    // Assembly Result
+    MultiplyMatrixWithTransposeAssembly(matrixResult, matrixOne, transposeMatrix, 4, auxArray);
+
+    FreeMemory(matrixResult, size);
+    FreeMemory(matrixOne, size);
+    FreeMemory(transposeMatrix, size);*/
+    //FreeMemory(auxArray, size);
+
+    //--------- Test Code - AULA DIA 24 --------------------
+    /*float* arrayResultSize8 = (float*)malloc(sizeof(float) * 8);
+    float* array1Size8 = (float*)malloc(sizeof(float) * 8);
+    float* array2Size8 = (float*)malloc(sizeof(float) * 8);
+
+    CleanPositionsArray(arrayResultSize8, 8);
+    PopulateArray(array1Size8, 8);
+    PopulateArray(array2Size8, 8);
+
+    SimpleMultiplyWithXMMAnyArrayValues1D(arrayResultSize8, array1Size8, array2Size8, 8);
+
+    // TODO: Remove Later
+    //--------------------- TEST CODE ----------------------
+
+    // Double Pointer Test
+    float** matrixOneToAssembly2 = CreateMatrixWithRandomValues(size);
+
+    float** matrix = new float* [4]; // Digo que para o duplo ponteiro vai ser o endereço de memoria = a um array de ponteiros float com tamanho 4
+    for (int i = 0; i < 4; ++i)
+        matrix[i] = new float[4]; // Para cada uma das posiçoes do array de ponteiros atribuo o valor de um novo array de floats
+
+    for (int i = 0; i < 4; i++)
+        matrix[0][i] = i;
+
+    for (int i = 0; i < 4; i++)
+        matrix[1][i] = i + 1;
+
+    for (int i = 0; i < 4; i++)
+        matrix[2][i] = i + 2;
+
+    for (int i = 0; i < 4; i++)
+        matrix[3][i] = i + 3;
+
+    //PrintMatrix(matrixOneToAssembly2, size, "-- Matrix Result Test Double Pointer --");
+    TestDoublePointer(matrix);
+
+
+    //-------------------- END TEST CODE --------------------
+
+
+
+    //---------------- Validate result with normal code --------------------------
+    float** matrixOneToAssembly = CreateMatrixWithRandomValues(size); //1º
+    float** matrixTwoToAssembly = CreateMatrixWithRandomValues(size); //1º
+    float** matrixResultFromAssembly = MultiplyMatrix(matrixOneToAssembly, matrixTwoToAssembly, size); //3º
+    PrintMatrix(matrixResultFromAssembly, size, "-- Matrix Result From Assembly --");//5º
+    //---------------- Test Transpose(Result need to be the same) ----------------
+    float** transposeMatrix = Transpose(matrixTwoToAssembly, size);
+    float** resultMatrix = AllocateMemoryForMatrix(size);
+    MultiplyMatrixWithTransposeCpp(resultMatrix, matrixOneToAssembly, transposeMatrix, size);
+    PrintMatrix(resultMatrix, size, "-- Matrix Result Using Transpose Matrix --");
+    //----------------------------------------------------------------------------
+
+    //---------------------------------------------------------
+
+
+    SimpleMultiplyWithXMMAnyArrayValues1D PROC
+                push ebp							; Save de EBP in the stack
+                mov ebp,esp							; Copy the ESP to EBP
+
+                mov edi, [esp + 8]		            ; Porque os registo guarda apenas os primeiro 4, porque soa registo 32bits 				; arrayResult +8Bytes
+                mov ebx, [esp + 12]					; ArrayOne
+                mov ecx, [esp + 16]					; ArrayTwo
+                mov edx, [esp + 20]                 ; Size
+
+                shr edx, 2                          ; Guardar o valor de quantas veze preciso de fazer o ciclo ; Cada shift é uma divisao por 2, ou seja shift de 2 é dividir por 4
+
+FirtCycleFor:   movdqu xmm0, [ebx]                  ; Como ebx é o inicio do array, estou a mover apenas os 4 primeiros bytes
+                movdqu xmm1, [ecx]
+
+                mulps xmm0, xmm1                    ; Multiplicar xmm0 com xmm1
+                movdqu [edi], xmm0                  ; Mover o resultado de xmm0 para [edi]
+
+                add ebx, 16                         ; adiciono 16 bytes, porque cada valor ocupa 4
+                add ecx, 16
+                add edi, 16
+
+                dec edx
+                jnz FirtCycleFor
+
+                pop ebp								; Restore the EBP
+                ret									; End the function and return to the main
+SimpleMultiplyWithXMMAnyArrayValues1D ENDP	        ; Indicates the end of the function.
+
+
+MultiplyMatrixWithAssemblyTrySize8 PROC             ; START Function
+
+    push ebp								        ; Save de EBP in the stack
+    mov ebp,esp								        ; Copy the ESP to EBP
+
+    mov edi, [esp + 8]		                        ; ArrayResult
+    mov ebx, [esp + 12]						        ; ArrayOne
+    mov ecx, [esp + 16]						        ; ArrayTwo
+
+    mov edx, [esp + 20]                             ; Size
+    mov counterFirstFor, edx                        ; Save size in counterFirstFor
+    mov counterSecondFor, edx                       ; Save size in counterSecondFor
+    mov counterSumFourValues, edx                   ; Save size in counterSumFourValues
+
+    imul eax, edx, 4                                ; Create offset - 4 bytes per float * size | 4bytes * edx(size)
+    mov offSetVarOne, eax                           ; Save offset
+
+    imul eax, edx                                   ; Create offset 2 - size * offSetVarOne | exd(size) * eax(edx*4)
+    mov offSetVarTwo, eax                           ; Save offset 2
+
+    mov eax, [esp + 24]                             ; AuxArray
+
+    FirtCycleFor:                                   ; Start FirtCycleFor
+
+        movdqu xmm0, [ebx]                          ; Move memory start of EBX to XMM0
+        movdqu xmm3, [ebx+16]                       ; !!!!!!! ---- HARDCODE TO WORK WITH 8 ---- !!!!!!
+
+        mov counterSecondFor, edx                   ; Reset counterSecondFor to have value of EDX, value of size
+
+        SecondCycleFor:                             ; Start SecondCycleFor
+
+            movdqu xmm1, [ecx]                      ; Move memory start of ECX to XMM1
+            movdqu xmm4, [ecx+16]                   ; !!!!!!! ---- HARDCODE TO WORK WITH 8 ---- !!!!!!
+
+            movdqu xmm5, xmm3                       ; !!!!!!! ---- HARDCODE TO WORK WITH 8 ---- !!!!!!
+            mulps xmm5, xmm4                        ; !!!!!!! ---- HARDCODE TO WORK WITH 8 ---- !!!!!!
+            movdqu [eax+16], xmm5                   ; !!!!!!! ---- HARDCODE TO WORK WITH 8 ---- !!!!!!
+
+            movdqu xmm2, xmm0                       ; Save XMM0 content in XMM2, do this to not change XMM0 content for the next's for's
+            mulps xmm2, xmm1                        ; Multiply XMM2 with XMM1 and save result in XMM2
+            movdqu [eax], xmm2                      ; Move XMM2 content to memory start of EAX
+
+            mov counterSumFourValues, edx           ; Reset counterSumFourValues to have value of EDX, value of size
+
+            fld dword ptr [floatZero]               ; Add first value to float stack, value 0.0, if I do not do this, the FADDP will not work because they need alreay a value in stack
+
+            SumValuesLoop:                          ; Start SumValuesLoop
+
+                fld dword ptr [eax]                 ; Move value in start memory of EAX to float stack
+                faddp                               ; Add the two value in stack and save the value again in the stack
+
+                add eax, 4                          ; Increment eax memory to get the next value Ex: eax = [0] -> eax + 4 -> eax[1]
+
+                dec counterSumFourValues            ; Decrement counterSumFourValues
+                jnz SumValuesLoop                   ; End loop if counterSumFourValues is zero | run the loop will counterSumFourValues different of zero
+
+            ;END SumValuesLoop                      ; END SumValuesLoop
+
+            sub eax, offSetVarOne                   ; Sub the number of bytes added to EAX to put EAX back to the initial possition
+
+            fstp dword ptr [edi]                    ; Save the value in stack to EDI memory location
+
+            add edi, 4                              ; Increment EDI with 4 value to use the next position of EDI in the next loop
+
+            add ecx, offSetVarOne                   ; Add offSet to ECX to move the memory to the next 4/8 element Ex: if size 4, offset 16, if size 8 offset 32
+
+            dec counterSecondFor                    ; Decrement counterSecondFor
+            jnz SecondCycleFor                      ; End loop if counterSecondFor is zero | run the loop will counterSecondFor different of zero
+
+        ;END SecondCycleFor                         ; END SecondCycleFor
+
+        add ebx, offSetVarOne                       ; Add offSet to EBX to move the memory to the next 4/8 element Ex: if size 4, offset 16, if size 8 offset 32
+
+        sub ecx, offSetVarTwo                       ; Sub the number of bytes added to ECX to put ECX back to the initial memory possition
+
+        dec counterFirstFor                         ; Decrement counterFirstFor
+        jnz FirtCycleFor                            ; End loop if counterFirstFor is zero | run the loop will counterFirstFor different of zero
+
+    ;END FirtCycleFor                               ; END FirtCycleFor
+
+    pop ebp									        ; Restore the EBP
+    ret										        ; End the function and return to the main
+
+MultiplyMatrixWithAssemblyTrySize8 ENDP             ; END Function
+
+
+void MultiplyMatrixWithAssemblyTrySize8(float* resultMatrix, float* matrixOne, float* matrixTwo, int size, float* auxArray);
+
+
 */
