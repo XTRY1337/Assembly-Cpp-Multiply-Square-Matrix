@@ -2,6 +2,12 @@
 
 .DATA										        ; Indicates the start of variable definitions
 
+
+; ------------------ General Vars ------------------
+
+floatSize dd 4
+
+
 ; ------------------ MultiplyMatrixWithAssembly Function Vars ------------------
 
 offSetVarOne dd 0                                   ; Var offSetVarOne          
@@ -14,13 +20,22 @@ counterSizeAfterShift dd 0                          ; Var counterSizeAfterShift
 
 floatZero dd 0.0                                    ; Var floatZero  
 
+
 ; ------------------ TransposeMatrixAssembly Function Vars ------------------
 
 counterFirstForTranspose dd 0                       ; Var counterFirstFor       
 counterSecondForTranspose dd 0                      ; Var counterSecondFor
-matrixFullSize dd 0                                 ; Var matrixFullSize
+counterSizeAfterShiftTranspose dd 0                 ; Var counterSizeAfterShiftTranspose
+
+auxValue1 dd 0                                      ; Var auxValue1
+auxValue2 dd 0                                      ; Var auxValue2
+
+; ------------------ Main Code ------------------
 
 .CODE										        ; Indicates the start of the code segment.
+
+
+; ------------------ MultiplyMatrixWithAssembly Function ------------------
 
 MultiplyMatrixWithAssembly PROC                     ; START Function
 
@@ -43,7 +58,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
     imul eax, edx, 4                                ; Create offset - 4 bytes per float * size | 4bytes * edx(size)
     mov offSetVarOne, eax                           ; Save offset
 
-    imul eax, edx                                   ; Create offset 2 - size * offSetVarOne | exd(size) * eax(edx*4)
+    imul eax, edx                                   ; Create offset 2 - size * offSetVarOne | exd(size) * eax(edx*4) and keep the edx value
     mov offSetVarTwo, eax                           ; Save offset 2
 
     mov eax, [esp + 24]                             ; AuxArray
@@ -74,7 +89,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
                 add ecx, 16                         ; Add 16 to move ECX 16 bytes
 
                 dec counterSizeAfterShift           ; Decrement counterSizeAfterShift
-                jnz ThirdCycleFor                   ; End loop if counterSizeAfterShift is zero | run the loop will counterSizeAfterShift different of zero
+                jnz ThirdCycleFor                   ; End loop if counterSizeAfterShift is zero
 
             ;END ThirdCycleFor                      ; END ThirdCycleFor
 
@@ -87,7 +102,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
                 sub ecx, 16                         ; Sub 16 
                 
                 dec counterSizeAfterShift           ; Decrement counterSizeAfterShift
-                jnz FourthCycleFor                  ; End loop if counterFourthFor is zero | run the loop will counterFourthFor different of zero
+                jnz FourthCycleFor                  ; End loop if counterFourthFor is zero
 
             ;END FourthCycleFor                     ; END FourthCycleFor
 
@@ -106,7 +121,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
                 add eax, 4                          ; Increment eax memory to get the next value Ex: eax = [0] -> eax + 4 -> eax[1]
 
                 dec counterSumFourValues            ; Decrement counterSumFourValues
-                jnz SumValuesLoop                   ; End loop if counterSumFourValues is zero | run the loop will counterSumFourValues different of zero
+                jnz SumValuesLoop                   ; End loop if counterSumFourValues is zero
 
             ;END SumValuesLoop                      ; END SumValuesLoop
 
@@ -119,7 +134,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
             add ecx, offSetVarOne                   ; Add offSet to ECX to move the memory to the next 4/8 element Ex: if size 4, offset 16, if size 8 offset 32
 
             dec counterSecondFor                    ; Decrement counterSecondFor
-            jnz SecondCycleFor                      ; End loop if counterSecondFor is zero | run the loop will counterSecondFor different of zero
+            jnz SecondCycleFor                      ; End loop if counterSecondFor is zero
             
         ;END SecondCycleFor                         ; END SecondCycleFor
 
@@ -128,7 +143,7 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
         sub ecx, offSetVarTwo                       ; Sub the number of bytes added to ECX to put ECX back to the initial memory possition
 
         dec counterFirstFor                         ; Decrement counterFirstFor        
-        jnz FirtCycleFor                            ; End loop if counterFirstFor is zero | run the loop will counterFirstFor different of zero
+        jnz FirtCycleFor                            ; End loop if counterFirstFor is zero
 
     ;END FirtCycleFor                               ; END FirtCycleFor
 
@@ -137,7 +152,10 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
 
 MultiplyMatrixWithAssembly ENDP                     ; END Function
 
-TransposeMatrixAssembly PROC
+
+; ------------------ TransposeMatrixAssembly Function ------------------
+
+TransposeMatrixAssembly PROC                        ; START Function
 
     push ebp								        ; Save de EBP in the stack
     mov ebp,esp								        ; Copy the ESP to EBP
@@ -146,47 +164,74 @@ TransposeMatrixAssembly PROC
     mov ebx, [esp + 12]						        ; AuxMatrix
     mov ecx, [esp + 16]						        ; Size
 
-    mov counterFirstForTranspose, ecx               ; Save size in counterFirstForTranspose
-    mov counterSecondForTranspose, ecx              ; Save size in counterSecondForTranspose
-
-    mov eax, ecx                                    ; Move Size value to EAX register
-    imul eax, ecx                                   ; Multiply EAX with ECX and save result in EAX
-    mov matrixFullSize, eax                         ; Move EAX value to matrixFullSize
-
-    ;Livres eax, ecx, esi
+    mov counterSizeAfterShiftTranspose, ecx         ; Save size in counterSizeAfterShiftTranspose
 
     FirtCycleFor:                                   ; START FirtCycleFor
         
-        mov counterSecondForTranspose, ecx          ; Reset counterSecondFor to have value of ECX, value of size
+        mov counterSecondForTranspose, 0            ; Reset counterSecondFor to have value of 0
 
         SecondCycleFor:                             ; START SecondCycleFor
+            
+            mov eax, ecx                            ; Move value of ECX to EAX, EAX = size      |
+            imul counterFirstForTranspose           ; EAX = EAX * counterFirstForTranspose(i)   | - > EAX = [i * size + j]
+            add eax, counterSecondForTranspose      ; EAX = EAX + counterSecondForTranspose(j)  |
 
-            ;Uso matriz temporaria para ir buscar os valores no formato que quero e salvalos nela
-            ;ISTO ;tempMatrix[i * size + j] = matrix[j * size + i];
+            imul floatSize                          ; EAX = EAX * floatSize(4)
+            mov auxValue1, eax                      ; Move value of EAX to auxVal1
 
-            dec counterSecondForTranspose           ; Decrement counterSecondForTranspose        
-            jnz SecondCycleFor                        ; End loop if counterSecondForTranspose is zero | run the loop will counterSecondForTranspose different of zero
+            mov eax, ecx                            ; Move value of ECX to EAX, EAX = size      |
+            imul counterSecondForTranspose          ; EAX = EAX * counterSecondForTranspose(j)  | - > EAX = [j * size + i]
+            add eax, counterFirstForTranspose       ; EAX = EAX + counterFirstForTranspose(i)   |
+
+            imul floatSize                          ; EAX = EAX * floatSize(4)
+            mov auxValue2, eax                      ; Move value of EAX to auxVal2
+
+            mov eax, auxValue1                      ; Move auxVal1 to EAX
+            mov eax, [edi + eax]                    ; Move content of EDI in position [EDI + EAX] to eax
+            
+            mov esi, auxValue2                      ; Move auxVal2 to ESI
+            mov [ebx + esi], eax                    ; Move value of EAX to the memory position of [EBX + ESI]
+
+            inc counterSecondForTranspose           ; Increment counterSecondForTranspose
+            cmp counterSecondForTranspose, ecx      ; Compare counterSecondForTranspose with ECX      
+            jne SecondCycleFor                      ; End loop if comparation is true
 
         ;END SecondCycleFor                         ; END SecondCycleFor
 
-        dec counterFirstForTranspose                ; Decrement counterFirstForTranspose        
-        jnz FirtCycleFor                            ; End loop if counterFirstForTranspose is zero | run the loop will counterFirstForTranspose different of zero
+        inc counterFirstForTranspose                ; Increment counterFirstForTranspose
+        cmp counterFirstForTranspose, ecx           ; Compare counterFirstForTranspose with ECX       
+        jne FirtCycleFor                            ; End loop if comparation is true
 
     ;END FirtCycleFor                               ; END FirtCycleFor
 
-    ThirdCycleFor:
-        
-        ;Uso a matriz temporaria para subscrever a matrix principal já transposta para usar na outra função assembly
-        ;ISTO ;matrix[i] = tempMatrix[i];
+    shr counterSizeAfterShiftTranspose, 2           ; Shift value 2 times = divide value by 4
+    mov esi, counterSizeAfterShiftTranspose         ; Save shifted value in ESI, to restore the counterSizeAfterShiftTranspose after cycles
 
-        dec matrixFullSize                          ; Decrement matrixFullSize        
-        jnz ThirdCycleFor                            ; End loop if counterFirstForTranspose is zero | run the loop will counterFirstForTranspose different of zero
+    ThirdCycleFor:                                  ; START ThirdCycleFor
+        
+        mov counterSizeAfterShiftTranspose, esi     ; Reset counterSizeAfterShiftTranspose value
+
+        FourthCycleFor:                             ; START FourthCycleFor
+
+            movdqu xmm0, [ebx]                      ; Move content of EBX to XMM0
+            movdqu [edi], xmm0                      ; Move XMM0 to start memory of XMM0
+
+            add ebx, 16                             ; Add 16 bytes to EBX
+            add edi, 16                             ; Add 16 bytes to EDI
+
+            dec counterSizeAfterShiftTranspose      ; Decrement counterSizeAfterShiftTranspose        
+            jnz FourthCycleFor                      ; End loop if counterSizeAfterShiftTranspose is zero
+
+        ;END FourthCycleFor                         ; END FourthCycleFor
+        
+        dec ecx                                     ; Decrement ecx        
+        jnz ThirdCycleFor                           ; End loop if ecx is zero
 
     ;END ThirdCycleFor                              ; END ThirdCycleFor
 
     pop ebp									        ; Restore the EBP
     ret										        ; End the function and return to the main
 
-TransposeMatrixAssembly ENDP
+TransposeMatrixAssembly ENDP                        ; END Function
 
 END											        ; Indicate the end of the asm file

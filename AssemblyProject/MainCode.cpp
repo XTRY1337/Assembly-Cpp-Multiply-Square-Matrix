@@ -50,10 +50,10 @@ int HandleInputValue() {
 
 float* CreateRandomFlatMatrix(int size) {
 
-    float* matrix = new float[size * size];                 // (float*)malloc(size * size);
+    float* matrix = (float*)malloc(size * size * sizeof(float)); //new float[size * size];       
 
     for (int i = 0; i < size * size; ++i)
-        matrix[i] = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / LIMITE_RANDOM_NUMBER)); //Numbers between 0 and LIMITE_RANDOM_NUMBER
+        matrix[i] = static_cast <int> (rand()) / (static_cast <int> (RAND_MAX / LIMITE_RANDOM_NUMBER)); //Numbers between 0 and LIMITE_RANDOM_NUMBER
 
     return matrix;
 }
@@ -70,19 +70,6 @@ void PrintMatrix(float* matrix, int size) {
     }
     std::cout << "\n" << std::endl;
 }
-
-/*void TransposeMatrix(float* matrix, int size) {
-    float* tempMatrix = new float[size * size];
-
-    for (int i = 0; i < size; ++i)
-        for (int j = 0; j < size; ++j)
-            tempMatrix[i * size + j] = matrix[j * size + i];
-
-    for (int i = 0; i < size * size; ++i)
-        matrix[i] = tempMatrix[i];
-
-    delete[] tempMatrix;
-}*/
 
 void MultiplyFlatMatrixes(float* resultMatrix, float* matrixOne, float* matrixTwo, int size) {
     for (int i = 0; i < size; i++) {
@@ -103,14 +90,13 @@ int main()
     int size = HandleInputValue();
 
     // Aux Array
-    float* auxArray = new float[size];                      // (float*)malloc(size);
+    float* auxArray = (float*)malloc(size * sizeof(float)); //new float[size]; 
 
     // Create Matrix's
-    float* matrixAssemblyResult = new float[size * size];   // (float*)malloc(size * size);
-    float* matrixCppResult = new float[size * size];        // (float*)malloc(size * size);
+    float* matrixAssemblyResult = (float*)malloc(size * size * sizeof(float)); //new float[size * size];   
+    float* matrixCppResult = (float*)malloc(size * size * sizeof(float));      //new float[size * size];
     float* matrixOne = CreateRandomFlatMatrix(size);
     float* matrixTwo = CreateRandomFlatMatrix(size);
-    float* matrixTwoTransposedAssembly = matrixTwo;
 
     // Print Matrix's
     std::cout << "-- Matrix One --" << std::endl;
@@ -119,14 +105,11 @@ int main()
     std::cout << "-- Matrix Two --" << std::endl;
     PrintMatrix(matrixTwo, size);
 
+    // Assembly Transpose
     std::cout << "-- Matrix Two Assembly Transposed --" << std::endl;
     float* auxMatrix = new float[size * size];
-    TransposeMatrixAssembly(matrixTwoTransposedAssembly, auxMatrix, size);
-    PrintMatrix(matrixTwoTransposedAssembly, size);
-
-    /*std::cout << "-- Matrix Two Cpp Transposed --" << std::endl;
-    TransposeMatrix(matrixTwo, size);
-    PrintMatrix(matrixTwo, size);*/
+    TransposeMatrixAssembly(matrixTwo, auxMatrix, size);
+    PrintMatrix(matrixTwo, size);
 
     // Assembly result
     std::cout << "-- Assembly Matrix Result --" << std::endl;
