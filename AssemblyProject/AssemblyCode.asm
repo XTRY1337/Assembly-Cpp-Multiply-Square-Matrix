@@ -15,10 +15,7 @@ offSetVarTwo dd 0                                   ; Var offSetVarTwo
                                                                                 
 counterFirstFor dd 0                                ; Var counterFirstFor       
 counterSecondFor dd 0                               ; Var counterSecondFor      
-counterSumFourValues dd 0                           ; Var counterSumFourValues  
 counterSizeAfterShift dd 0                          ; Var counterSizeAfterShift
-
-floatZero dd 0.0                                    ; Var floatZero  
 
 
 ; ------------------ TransposeMatrixAssembly Function Vars ------------------
@@ -45,11 +42,10 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
     mov edi, [esp + 8]		                        ; ArrayResult
     mov ebx, [esp + 12]						        ; ArrayOne
     mov ecx, [esp + 16]						        ; ArrayTwo
-
     mov edx, [esp + 20]                             ; Size
+
     mov counterFirstFor, edx                        ; Save size in counterFirstFor
     mov counterSecondFor, edx                       ; Save size in counterSecondFor
-    mov counterSumFourValues, edx                   ; Save size in counterSumFourValues
     mov counterSizeAfterShift, edx                  ; Save size in counterSizeAfterShift
 
     shr counterSizeAfterShift, 2                    ; Shift value 2 times = divide value by 4
@@ -61,73 +57,42 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
     imul eax, edx                                   ; Create offset 2 - size * offSetVarOne | exd(size) * eax(edx*4) and keep the edx value
     mov offSetVarTwo, eax                           ; Save offset 2
 
-    mov eax, [esp + 24]                             ; AuxArray
-
     FirtCycleFor:                                   ; START FirtCycleFor
 
-        movdqu xmm0, [ebx]                          ; Move memory start of EBX to XMM0
+        movdqa xmm0, [ebx]                          ; Move memory start of EBX to XMM0
 
         mov counterSecondFor, edx                   ; Reset counterSecondFor to have value of EDX, value of size
 
         SecondCycleFor:                             ; START SecondCycleFor
             
-            movdqu xmm1, [ecx]                      ; Move memory start of ECX to XMM1
+            movdqa xmm1, [ecx]                      ; Move memory start of ECX to XMM1
 
             mov counterSizeAfterShift, esi          ; Reset counterSizeAfterShift to have value of ESI, value of (size/4)
 
+            pxor xmm3, xmm3                         ; Reset Accumulator to the next calculation
+            xor eax, eax                            ; Reset EAX
+
             ThirdCycleFor:                          ; START ThirdCycleFor
                 
-                movdqu xmm0, [ebx]                  ; Move memory start of EBX again to XMM0, 1ºTime value is the same, 2ºTime value is EBX+16, 3ºTime value is EBX+32
-                movdqu xmm1, [ecx]                  ; Move memory start of ECX again to XMM1, 1ºTime value is the same, 2ºTime value is EBX+16, 3ºTime value is EBX+32
+                movdqa xmm0, [ebx+eax]              ; Move memory start of EBX again to XMM0
+                movdqa xmm1, [ecx+eax]              ; Move memory start of ECX again to XMM1
 
-                movdqu xmm2, xmm0                   ; Save XMM0 content in XMM2, do this to not change XMM0 content for the next's for's
+                movdqa xmm2, xmm0                   ; Save XMM0 content in XMM2, do this to not change XMM0 content for the next's for's
                 mulps xmm2, xmm1                    ; Multiply XMM2 with XMM1 and save result in XMM2
-                movdqu [eax], xmm2                  ; Move XMM2 content to memory start of EAX
+
+                addps xmm3, xmm2                    ; Accumulator, add values in vertical
 
                 add eax, 16                         ; Add 16 to move EAX 16 bytes
-                add ebx, 16                         ; Add 16 to move EBX 16 bytes
-                add ecx, 16                         ; Add 16 to move ECX 16 bytes
 
                 dec counterSizeAfterShift           ; Decrement counterSizeAfterShift
                 jnz ThirdCycleFor                   ; End loop if counterSizeAfterShift is zero
 
             ;END ThirdCycleFor                      ; END ThirdCycleFor
 
-            mov counterSizeAfterShift, esi          ; Reset counterSizeAfterShift to have value of ESI, value of (size/4)
+            haddps xmm3, xmm3                       ; Example "haddps xmm1, xmm2" = xmm1[xmm2[0] + xmm2[1], xmm2[2] + xmm2[3], xmm1[0] + xmm1[1], xmm1[2] + xmm1[3]]
+            haddps xmm3, xmm3                       ; Example "haddps xmm1, xmm2" = xmm1[xmm2[0] + xmm2[1], xmm2[2] + xmm2[3], xmm1[0] + xmm1[1], xmm1[2] + xmm1[3]]
 
-            FourthCycleFor:                         ; START FourthCycleFor
-
-                sub eax, 16                         ; Sub 16
-                sub ebx, 16                         ; Sub 16
-                sub ecx, 16                         ; Sub 16 
-                
-                dec counterSizeAfterShift           ; Decrement counterSizeAfterShift
-                jnz FourthCycleFor                  ; End loop if counterFourthFor is zero
-
-            ;END FourthCycleFor                     ; END FourthCycleFor
-
-            movdqu xmm0, [ebx]                      ; Restore the original value of XMM0 before call ThirdCycleFor 
-            movdqu xmm1, [ecx]                      ; Restore the original value of XMM0 before call ThirdCycleFor 
-
-            mov counterSumFourValues, edx           ; Reset counterSumFourValues to have value of EDX, value of size
-
-            fld dword ptr [floatZero]               ; Add first value to float stack, value 0.0, if I do not do this, the FADDP will not work because they need alreay a value in stack
-
-            SumValuesLoop:                          ; START SumValuesLoop
-
-                fld dword ptr [eax]                 ; Move value in start memory of EAX to float stack
-                faddp                               ; Add the two value in stack and save the value again in the stack
-
-                add eax, 4                          ; Increment eax memory to get the next value Ex: eax = [0] -> eax + 4 -> eax[1]
-
-                dec counterSumFourValues            ; Decrement counterSumFourValues
-                jnz SumValuesLoop                   ; End loop if counterSumFourValues is zero
-
-            ;END SumValuesLoop                      ; END SumValuesLoop
-
-            sub eax, offSetVarOne                   ; Sub the number of bytes added to EAX to put EAX back to the initial possition
-
-            fstp dword ptr [edi]                    ; Save the value in stack to EDI memory location
+            movss dword ptr [edi], xmm3             ; Mover o ultimo valor de xmm3/resultado da soma, xmm3[3], para o endereço de memoria EDI
 
             add edi, 4                              ; Increment EDI with 4 value to use the next position of EDI in the next loop  
 
@@ -163,6 +128,10 @@ TransposeMatrixAssembly PROC                        ; START Function
     mov edi, [esp + 8]		                        ; MatrixToTranspose
     mov ebx, [esp + 12]						        ; AuxMatrix
     mov ecx, [esp + 16]						        ; Size
+
+    mov auxValue1, 0                                ; Reset auxValue1 to have value 0
+    mov auxValue2, 0                                ; Reset auxValue2 to have value 0
+    mov counterFirstForTranspose, 0                 ; Reset counterFirstForTranspose to have value of 0
 
     mov counterSizeAfterShiftTranspose, ecx         ; Save size in counterSizeAfterShiftTranspose
 
@@ -213,8 +182,8 @@ TransposeMatrixAssembly PROC                        ; START Function
 
         FourthCycleFor:                             ; START FourthCycleFor
 
-            movdqu xmm0, [ebx]                      ; Move content of EBX to XMM0
-            movdqu [edi], xmm0                      ; Move XMM0 to start memory of XMM0
+            movdqa xmm0, [ebx]                      ; Move content of EBX to XMM0
+            movdqa [edi], xmm0                      ; Move XMM0 to start memory of XMM0
 
             add ebx, 16                             ; Add 16 bytes to EBX
             add edi, 16                             ; Add 16 bytes to EDI
