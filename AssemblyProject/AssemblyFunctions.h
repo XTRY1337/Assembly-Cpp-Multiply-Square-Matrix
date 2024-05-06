@@ -8,7 +8,7 @@ extern "C" {
     void MultiplyMatrixWithAssembly(float* resultMatrix, float* matrixOne, float* matrixTwo, int size);
 
     // Transpose Function
-    void TransposeMatrixAssembly(float* matrixToTranspose, float* auxMatrix, int size);
+    void TransposeMatrixAssembly(float* matrixToTranspose, int size);
 }
 
 #endif

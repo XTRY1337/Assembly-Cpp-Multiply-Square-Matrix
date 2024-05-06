@@ -39,10 +39,10 @@ MultiplyMatrixWithAssembly PROC                     ; START Function
     push ebp								        ; Save de EBP in the stack
     mov ebp,esp								        ; Copy the ESP to EBP
 
-    mov edi, [esp + 8]		                        ; ArrayResult
-    mov ebx, [esp + 12]						        ; ArrayOne
-    mov ecx, [esp + 16]						        ; ArrayTwo
-    mov edx, [esp + 20]                             ; Size
+    mov edi, [ebp + 8]		                        ; ArrayResult
+    mov ebx, [ebp + 12]						        ; ArrayOne
+    mov ecx, [ebp + 16]						        ; ArrayTwo
+    mov edx, [ebp + 20]                             ; Size
 
     mov counterFirstFor, edx                        ; Save size in counterFirstFor
     mov counterSecondFor, edx                       ; Save size in counterSecondFor
@@ -125,78 +125,62 @@ TransposeMatrixAssembly PROC                        ; START Function
     push ebp								        ; Save de EBP in the stack
     mov ebp,esp								        ; Copy the ESP to EBP
 
-    mov edi, [esp + 8]		                        ; MatrixToTranspose
-    mov ebx, [esp + 12]						        ; AuxMatrix
-    mov ecx, [esp + 16]						        ; Size
+    mov edi, [ebp + 8]		                        ; MatrixToTranspose
+    mov ebx, [ebp + 12]						        ; Size
 
     mov auxValue1, 0                                ; Reset auxValue1 to have value 0
     mov auxValue2, 0                                ; Reset auxValue2 to have value 0
-    mov counterFirstForTranspose, 0                 ; Reset counterFirstForTranspose to have value of 0
 
-    mov counterSizeAfterShiftTranspose, ecx         ; Save size in counterSizeAfterShiftTranspose
+    mov counterFirstForTranspose, 0                 ; Reset counterFirstForTranspose to have value of 0
 
     FirtCycleFor:                                   ; START FirtCycleFor
         
-        mov counterSecondForTranspose, 0            ; Reset counterSecondFor to have value of 0
+        mov counterSecondForTranspose, 1            ; Reset counterSecondForTranspose to have value of 1
+        mov eax, counterFirstForTranspose           ; Mov counterSecondForTranspose to EAX
+        add counterSecondForTranspose, eax          ; counterSecondForTranspose = counterFirstForTranspose + 1
 
         SecondCycleFor:                             ; START SecondCycleFor
             
-            mov eax, ecx                            ; Move value of ECX to EAX, EAX = size      |
+            cmp counterSecondForTranspose, ebx
+            je CylTest
+
+            mov eax, ebx                            ; Move value of EBX to EAX, EAX = size      |
             imul counterFirstForTranspose           ; EAX = EAX * counterFirstForTranspose(i)   | - > EAX = [i * size + j]
             add eax, counterSecondForTranspose      ; EAX = EAX + counterSecondForTranspose(j)  |
 
             imul floatSize                          ; EAX = EAX * floatSize(4)
             mov auxValue1, eax                      ; Move value of EAX to auxVal1
 
-            mov eax, ecx                            ; Move value of ECX to EAX, EAX = size      |
+            mov eax, ebx                            ; Move value of ECX to EAX, EAX = size      |
             imul counterSecondForTranspose          ; EAX = EAX * counterSecondForTranspose(j)  | - > EAX = [j * size + i]
             add eax, counterFirstForTranspose       ; EAX = EAX + counterFirstForTranspose(i)   |
 
             imul floatSize                          ; EAX = EAX * floatSize(4)
             mov auxValue2, eax                      ; Move value of EAX to auxVal2
 
-            mov eax, auxValue1                      ; Move auxVal1 to EAX
-            mov eax, [edi + eax]                    ; Move content of EDI in position [EDI + EAX] to eax
-            
-            mov esi, auxValue2                      ; Move auxVal2 to ESI
-            mov [ebx + esi], eax                    ; Move value of EAX to the memory position of [EBX + ESI]
+            mov eax, auxValue1
+            mov ecx, [edi + eax]                    ;float temp = matrix[i * size + j];
+
+            mov esi, auxValue2
+            mov esi, [edi + esi]
+            mov [edi + eax], esi                    ;matrix[i * size + j] = matrix[j * size + i];
+                              
+            mov esi, auxValue2
+            mov [edi + esi], ecx                    ;matrix[j * size + i] = temp;
 
             inc counterSecondForTranspose           ; Increment counterSecondForTranspose
-            cmp counterSecondForTranspose, ecx      ; Compare counterSecondForTranspose with ECX      
+            cmp counterSecondForTranspose, ebx      ; Compare counterSecondForTranspose with ebx      
             jne SecondCycleFor                      ; End loop if comparation is true
 
         ;END SecondCycleFor                         ; END SecondCycleFor
 
+        CylTest:
+
         inc counterFirstForTranspose                ; Increment counterFirstForTranspose
-        cmp counterFirstForTranspose, ecx           ; Compare counterFirstForTranspose with ECX       
+        cmp counterFirstForTranspose, ebx           ; Compare counterFirstForTranspose with ebx       
         jne FirtCycleFor                            ; End loop if comparation is true
 
     ;END FirtCycleFor                               ; END FirtCycleFor
-
-    shr counterSizeAfterShiftTranspose, 2           ; Shift value 2 times = divide value by 4
-    mov esi, counterSizeAfterShiftTranspose         ; Save shifted value in ESI, to restore the counterSizeAfterShiftTranspose after cycles
-
-    ThirdCycleFor:                                  ; START ThirdCycleFor
-        
-        mov counterSizeAfterShiftTranspose, esi     ; Reset counterSizeAfterShiftTranspose value
-
-        FourthCycleFor:                             ; START FourthCycleFor
-
-            movdqa xmm0, [ebx]                      ; Move content of EBX to XMM0
-            movdqa [edi], xmm0                      ; Move XMM0 to start memory of XMM0
-
-            add ebx, 16                             ; Add 16 bytes to EBX
-            add edi, 16                             ; Add 16 bytes to EDI
-
-            dec counterSizeAfterShiftTranspose      ; Decrement counterSizeAfterShiftTranspose        
-            jnz FourthCycleFor                      ; End loop if counterSizeAfterShiftTranspose is zero
-
-        ;END FourthCycleFor                         ; END FourthCycleFor
-        
-        dec ecx                                     ; Decrement ecx        
-        jnz ThirdCycleFor                           ; End loop if ecx is zero
-
-    ;END ThirdCycleFor                              ; END ThirdCycleFor
 
     pop ebp									        ; Restore the EBP
     ret										        ; End the function and return to the main

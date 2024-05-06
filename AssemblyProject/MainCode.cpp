@@ -5,7 +5,7 @@
 #define LIMITE_RANDOM_NUMBER 10
 
 #define FLAG_ASSEMBLY
-//#define FLAG_CPP
+#define FLAG_CPP
 
 //---------------- Complementary Functions Section ----------------
 
@@ -74,16 +74,13 @@ void MultiplyFlatMatrixes(float* resultMatrix, float* matrixOne, float* matrixTw
 }
 
 void TransposeMatrixCpp(float* matrix, int size) {
-    float* auxMatrix = (float*)_aligned_malloc(size * size * sizeof(float), 16);
-
-    for (int i = 0; i < size; ++i)
-        for (int j = 0; j < size; ++j)
-            auxMatrix[j * size + i] = matrix[i * size + j];
-
-    for (int i = 0; i < size * size; ++i)
-        matrix[i] = auxMatrix[i];
-
-    _aligned_free(auxMatrix);
+    for (int i = 0; i < size; i++) {
+        for (int j = i + 1; j < size; j++) {
+            float temp = matrix[i * size + j];
+            matrix[i * size + j] = matrix[j * size + i];
+            matrix[j * size + i] = temp;
+        }
+    }
 }
 
 void PrintExecutionTime(std::chrono::steady_clock::time_point start, std::chrono::steady_clock::time_point end) {
@@ -112,12 +109,14 @@ int main()
     std::cout << "-- Matrix Two --" << std::endl;
     PrintMatrix(matrixTwo, size);
 
+    TransposeMatrixAssembly(matrixTwo, size);
+    PrintMatrix(matrixTwo, size);
+
 #ifdef FLAG_ASSEMBLY
     // Assembly Transpose
     std::cout << "-- Matrix Two Assembly Transposed --" << std::endl;
-    float* auxMatrix = (float*)_aligned_malloc(size * size * sizeof(float), 16);
     std::chrono::steady_clock::time_point startTransposeAssemblyFunction = std::chrono::high_resolution_clock::now();
-    TransposeMatrixAssembly(matrixTwo, auxMatrix, size);
+    TransposeMatrixAssembly(matrixTwo, size);
     std::chrono::steady_clock::time_point endTransposeAssemblyFunction = std::chrono::high_resolution_clock::now();
     PrintMatrix(matrixTwo, size);
 
@@ -127,7 +126,7 @@ int main()
 
 #ifdef FLAG_CPP
     // Cpp Transpose Calculation time
-    TransposeMatrixAssembly(matrixTwo, auxMatrix, size); // Transpose again to get original matrix 
+    TransposeMatrixAssembly(matrixTwo, size); // Transpose again to get original matrix 
     std::cout << "-- Matrix Cpp Transposed Example --" << std::endl;
     std::chrono::steady_clock::time_point startTransposeCppFunction = std::chrono::high_resolution_clock::now();
     TransposeMatrixCpp(matrixTwo, size);
@@ -167,7 +166,6 @@ int main()
     _aligned_free(matrixCppResult);
     _aligned_free(matrixOne);
     _aligned_free(matrixTwo);
-    _aligned_free(auxMatrix);
 
     // Stop application
     return 0;
