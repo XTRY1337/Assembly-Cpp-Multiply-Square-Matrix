@@ -1,4 +1,4 @@
-# Arquitetura de Computadores - Projeto em grupo
+# Arquitetura de Computadores
 
 ## Regras gerais
 
